@@ -1,0 +1,122 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "NETGEAR Pro AV Switch",
+        "description": "Add a NETGEAR Pro AV switch using the local AVUI REST API.",
+        "menu_options": {
+          "manual": "Add one switch manually",
+          "subnet_scan": "Scan a subnet"
+        },
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "REST API port",
+          "verify_ssl": "Verify SSL certificate",
+          "vlans": "VLAN IDs to poll"
+        }
+      },
+      "manual": {
+        "title": "Add NETGEAR Pro AV Switch",
+        "description": "Add one switch using the local AVUI REST API. Create a dedicated switch user in the NETGEAR web UI for Home Assistant; do not share the admin account with Engage or browser sessions.",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "REST API port",
+          "verify_ssl": "Verify SSL certificate",
+          "vlans": "VLAN IDs to poll",
+          "enable_admin_controls": "Enable port admin controls",
+          "enable_poe_controls": "Enable port PoE controls",
+          "enable_poe_reset": "Enable port PoE reset buttons",
+          "enable_admin_bounce": "Enable port admin bounce buttons",
+          "enable_fan_mode_control": "Enable fan mode control",
+          "enable_save_config": "Enable save config button",
+          "enable_reboot_control": "Enable guarded reboot control"
+        }
+      },
+      "subnet_scan": {
+        "title": "Scan for NETGEAR Pro AV Switches",
+        "description": "Scan a subnet for switches that respond to the local AVUI REST API. Create a dedicated switch user in the NETGEAR web UI for Home Assistant; do not share the admin account with Engage or browser sessions.",
+        "data": {
+          "subnet": "Subnet to scan",
+          "username": "Username",
+          "password": "Password",
+          "port": "REST API port",
+          "verify_ssl": "Verify SSL certificate",
+          "vlans": "VLAN IDs to poll",
+          "enable_admin_controls": "Enable port admin controls",
+          "enable_poe_controls": "Enable port PoE controls",
+          "enable_poe_reset": "Enable port PoE reset buttons",
+          "enable_admin_bounce": "Enable port admin bounce buttons",
+          "enable_fan_mode_control": "Enable fan mode control",
+          "enable_save_config": "Enable save config button",
+          "enable_reboot_control": "Enable guarded reboot control"
+        }
+      },
+      "subnet_pick": {
+        "title": "Select NETGEAR Pro AV Switch",
+        "description": "Choose one of the switches found during the subnet scan.",
+        "data": {
+          "host": "Switch"
+        }
+      },
+      "discovery_confirm": {
+        "title": "Discovered NETGEAR Pro AV Switch",
+        "description": "Confirm the discovered switch and enter its AVUI credentials. Create a dedicated switch user in the NETGEAR web UI for Home Assistant; do not share the admin account with Engage or browser sessions.",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "REST API port",
+          "verify_ssl": "Verify SSL certificate",
+          "vlans": "VLAN IDs to poll",
+          "enable_admin_controls": "Enable port admin controls",
+          "enable_poe_controls": "Enable port PoE controls",
+          "enable_poe_reset": "Enable port PoE reset buttons",
+          "enable_admin_bounce": "Enable port admin bounce buttons",
+          "enable_fan_mode_control": "Enable fan mode control",
+          "enable_save_config": "Enable save config button",
+          "enable_reboot_control": "Enable guarded reboot control"
+        }
+      },
+      "init": {
+        "title": "NETGEAR Pro AV Switch options",
+        "description": "Adjust connection, polling, and guarded control settings. Use a dedicated switch user for Home Assistant; sharing the admin account with Engage or browser sessions can interrupt switch API sessions.",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "port": "REST API port",
+          "verify_ssl": "Verify SSL certificate",
+          "scan_interval": "Polling interval in seconds",
+          "vlans": "VLAN IDs to poll",
+          "protection_markers": "Auto-protection markers",
+          "auto_protect_timeout": "Auto re-protect timeout in seconds",
+          "enable_admin_controls": "Enable port admin controls",
+          "enable_poe_controls": "Enable port PoE controls",
+          "enable_poe_reset": "Enable port PoE reset buttons",
+          "enable_admin_bounce": "Enable port admin bounce buttons",
+          "enable_fan_mode_control": "Enable fan mode control",
+          "enable_save_config": "Enable save config button",
+          "enable_port_description_control": "Enable port description editing",
+          "enable_reboot_control": "Enable guarded reboot control"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the switch AVUI REST API.",
+      "invalid_auth": "Invalid username or password.",
+      "invalid_subnet": "Subnet must be a valid CIDR range.",
+      "invalid_vlan_list": "VLAN IDs must be a comma-separated list of numbers from 1 to 4094."
+      ,
+      "no_switches_found": "No NETGEAR Pro AV switches were found on that subnet.",
+      "subnet_too_large": "Subnet scan is limited to 1024 addresses."
+    },
+    "abort": {
+      "already_configured": "This switch is already configured.",
+      "already_in_progress": "This switch is already being configured."
+    }
+  }
+}

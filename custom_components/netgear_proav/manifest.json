@@ -1,0 +1,65 @@
+{
+  "domain": "netgear_proav",
+  "name": "NETGEAR Pro AV Switch",
+  "codeowners": [
+    "@Hyperion5088"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/Hyperion5088/ha-netgear-proav",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Hyperion5088/ha-netgear-proav/issues",
+  "requirements": [],
+  "ssdp": [
+    {
+      "manufacturer": "NETGEAR",
+      "modelName": "M4250*"
+    },
+    {
+      "manufacturer": "NETGEAR",
+      "modelName": "M4300*"
+    },
+    {
+      "manufacturer": "NETGEAR",
+      "modelName": "M4350*"
+    },
+    {
+      "manufacturer": "NETGEAR",
+      "modelName": "M4500*"
+    }
+  ],
+  "version": "1.0.0",
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "*M4250*"
+    },
+    {
+      "type": "_http._tcp.local.",
+      "name": "*M4300*"
+    },
+    {
+      "type": "_http._tcp.local.",
+      "name": "*M4350*"
+    },
+    {
+      "type": "_http._tcp.local.",
+      "name": "*M4500*"
+    },
+    {
+      "type": "_https._tcp.local.",
+      "name": "*M4250*"
+    },
+    {
+      "type": "_https._tcp.local.",
+      "name": "*M4300*"
+    },
+    {
+      "type": "_https._tcp.local.",
+      "name": "*M4350*"
+    },
+    {
+      "type": "_https._tcp.local.",
+      "name": "*M4500*"
+    }
+  ]
+}
