@@ -62,7 +62,7 @@ The integration uses:
 - `POST /api/v1/device_fan` when changing fan mode
 - port admin, PoE, config-save, reboot, and description endpoints when the related controls are enabled
 
-Use a dedicated switch API user. NETGEAR documents sessions as exclusive per user on some models, and NETGEAR Engage also uses the switch `admin` account by default. Sharing `admin` between Engage, browser sessions, and Home Assistant can interrupt active sessions and cause polling or controls to fail.
+Use a dedicated switch API user. NETGEAR documents sessions as exclusive per user on some models. If you use NETGEAR Engage to manage switches, avoid using the built-in `admin` account for this integration because Engage also uses `admin` by default. Sharing the same account between Engage, browser sessions, and Home Assistant can interrupt active sessions and cause polling or controls to fail.
 
 ## Controls And Safety
 
@@ -70,7 +70,7 @@ Write actions are exposed as guarded controls. Port admin, admin bounce, PoE ena
 
 Port config protection is stored in Home Assistant and is intended to reduce accidental changes on infrastructure ports. Critical ports are detected from LLDP and port metadata, can be temporarily unlocked for maintenance, and automatically re-lock after the configured timeout.
 
-Use Pause Polling before working in the vendor web UI with the same switch account. The pause resumes automatically after the configured timeout.
+Use Pause Polling only when you need to log in to the vendor web UI with the same switch account used by this integration. The pause resumes automatically after the configured timeout. If you use a separate browser/Engage account, pausing is normally unnecessary.
 
 ## Notes
 
