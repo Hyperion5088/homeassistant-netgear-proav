@@ -2,6 +2,10 @@
 
 Home Assistant integration for NETGEAR Pro AV switches using the local AVUI REST API.
 
+This repository is the HACS integration. The companion dashboard card is [`netgear-proav-switch-card`](https://github.com/Hyperion5088/netgear-proav-switch-card).
+
+[![Add this repository to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Hyperion5088&repository=ha-netgear-proav&category=integration)
+
 ## Status
 
 This V1.0 release is designed to expose switch infrastructure state without creating Home Assistant network-client trackers. Guarded switch controls are available per switch and should be enabled only where they are useful.
@@ -35,13 +39,22 @@ Not included yet:
 
 ## Installation
 
-For HACS custom repository installation, publish this directory as a repository with the `custom_components/netgear_proav` folder at the repository root, then add it to HACS as an integration.
+### HACS
 
-For manual installation, copy `custom_components/netgear_proav` to your Home Assistant `custom_components` directory.
+1. Use the button above, or add this repository to HACS manually:
+   - Repository: `https://github.com/Hyperion5088/ha-netgear-proav`
+   - Category: `Integration`
+2. Install `NETGEAR Pro AV Switch` from HACS.
+3. Restart Home Assistant.
+4. Add the integration from Settings > Devices & services.
 
-After installation, restart Home Assistant and add the integration from Settings > Devices & services.
+### Manual
 
-The optional Lovelace card is packaged separately as the [`netgear-proav-switch-card`](https://github.com/Hyperion5088/netgear-proav-switch-card) HACS dashboard plugin. Add that repository to HACS as a dashboard/plugin repository, then add a card with `type: custom:netgear-proav-switch-card-v3`.
+Copy `custom_components/netgear_proav` to your Home Assistant `custom_components` directory, restart Home Assistant, then add the integration from Settings > Devices & services.
+
+### Related Repository
+
+The optional Lovelace card is packaged separately as the [`netgear-proav-switch-card`](https://github.com/Hyperion5088/netgear-proav-switch-card) HACS dashboard/plugin repository. Add that repository to HACS as a dashboard/plugin repository, then add a card with `type: custom:netgear-proav-switch-card-v3`.
 
 ## Configuration
 
