@@ -242,8 +242,33 @@ class NetgearProAvClient:
         config: dict[str, Any],
     ) -> dict[str, Any]:
         """Set a port description."""
+        row = {
+            **config,
+            "port": str(config.get("port") or port_id),
+            "portNum": port_id,
+            "portStr": config.get("portStr") or config.get("portName") or str(port_id),
+            "unit": config.get("unit") or config.get("unitId") or 1,
+            "adminState": config.get("adminState", 1),
+            "description": description,
+            "flowControl": config.get("flowControl") or "Disable",
+        }
+        try:
+            return await self.async_post_json(
+                "swcfg_ports_ex",
+                {
+                    "switchPortConfig": {
+                        "rows": [row],
+                    }
+                },
+            )
+        except NetgearProAvAuthError:
+            raise
+        except NetgearProAvError:
+            pass
+
         port_config = {
             "portNum": [port_id],
+            "lagId": [int(config["lagId"])] if config.get("lagId") is not None else [],
             "description": description,
         }
         for key in (
