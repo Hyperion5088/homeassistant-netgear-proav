@@ -54,7 +54,7 @@ Copy `custom_components/netgear_proav` to your Home Assistant `custom_components
 
 ### Related Repository
 
-The optional Lovelace card is packaged separately as the [`netgear-proav-switch-card`](https://github.com/Hyperion5088/homeassistant-netgear-proav-switch-card) HACS dashboard/plugin repository. Add that repository to HACS as a dashboard/plugin repository, then add a card with `type: custom:netgear-proav-switch-card-v3`.
+The optional Lovelace card is packaged separately as the [`netgear-proav-switch-card`](https://github.com/Hyperion5088/homeassistant-netgear-proav-switch-card) HACS dashboard/plugin repository. Add that repository to HACS as a dashboard/plugin repository, then add a card with `type: custom:netgear-proav-switch-card`.
 
 ## Configuration
 
