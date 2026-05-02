@@ -5,9 +5,9 @@
     "@Hyperion5088"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/Hyperion5088/ha-netgear-proav",
+  "documentation": "https://github.com/Hyperion5088/homeassistant-netgear-proav",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/Hyperion5088/ha-netgear-proav/issues",
+  "issue_tracker": "https://github.com/Hyperion5088/homeassistant-netgear-proav/issues",
   "requirements": [],
   "ssdp": [
     {
