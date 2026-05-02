@@ -14,7 +14,7 @@ Current scope:
 
 - switch inventory, firmware, uptime, CPU, memory, temperature, and PoE budget sensors
 - one binary sensor per physical port, with link state as the state
-- port attributes for admin state, speed, profile, VLAN/PVID, STP, traffic, LLDP, PoE/fiber details, and description suggestions
+- port attributes for admin state, speed, profile, VLAN/PVID, STP, multicast subscriber summaries, traffic, LLDP, PoE/fiber details, and description suggestions
 - LAG pseudo-ports are exposed only when the switch reports member ports for that LAG
 - one PoE power sensor per PoE-capable port, with delivery/status details as attributes
 - switch-level LLDP neighbor summary

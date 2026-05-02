@@ -180,6 +180,42 @@ class NetgearProAvClient:
         """Read fiber optic EEPROM metadata."""
         return await self.async_get_json("fiber_optics_eeprom")
 
+    async def async_stp_config(self) -> dict[str, Any]:
+        """Read switch-level Spanning Tree Protocol details."""
+        return await self.async_get_json("stp_config")
+
+    async def async_stp_port_info(self) -> dict[str, Any]:
+        """Read per-port Spanning Tree Protocol details."""
+        return await self.async_get_json("stp_port_info")
+
+    async def async_multicast_groups(
+        self,
+        index_page: int = 1,
+        page_size: int = 9999,
+        unit: int | None = 1,
+    ) -> dict[str, Any]:
+        """Read multicast group membership rows."""
+        params: dict[str, Any] = {"indexPage": index_page, "pageSize": page_size}
+        if unit is not None:
+            params["unit"] = unit
+        return await self.async_get_json("multicast_groups", params)
+
+    async def async_dns_lookup(self, domain_name: str) -> dict[str, Any]:
+        """Run a DNS lookup from the switch."""
+        return await self.async_get_json("dns_lookup", {"domainName": domain_name})
+
+    async def async_ping_test(self, ip_addr: str) -> dict[str, Any]:
+        """Run a ping test from the switch."""
+        return await self.async_get_json("ping_test", {"ipAddr": ip_addr})
+
+    async def async_trace_test(self, ip_addr: str) -> dict[str, Any]:
+        """Run a traceroute test from the switch."""
+        return await self.async_get_json("trace_test", {"ipAddr": ip_addr})
+
+    async def async_cable_test(self, ports: list[int]) -> dict[str, Any]:
+        """Run a cable test against selected physical ports."""
+        return await self.async_get_json("cable_test", {"ports": ports})
+
     async def async_image_info(self) -> dict[str, Any]:
         """Read firmware image information."""
         return await self.async_get_json("imageInfo")

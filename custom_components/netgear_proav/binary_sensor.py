@@ -355,6 +355,11 @@ class NetgearPortLinkSensor(CoordinatorEntity[NetgearProAvCoordinator], BinarySe
         optics = self.coordinator.data.fiber_optics.get(self.port_id, {})
         fiber_diag = self.coordinator.data.fiber_diag.get(self.port_id, {})
         fiber_eeprom = self.coordinator.data.fiber_eeprom.get(self.port_id, {})
+        stp = self.coordinator.data.stp_ports.get(self.port_id, {})
+        multicast = self.coordinator.data.multicast_groups_by_port.get(
+            self.port_id,
+            {"group_count": 0, "vlans": [], "groups": [], "subscribers": [], "rows": []},
+        )
         raw_neighbors = self.coordinator.data.neighbors_by_port.get(self.port_id, [])
         neighbors = _unique_neighbors(raw_neighbors)
         is_fiber = _port_is_fiber(port, config, state, optics, fiber_diag, fiber_eeprom)
@@ -380,6 +385,17 @@ class NetgearPortLinkSensor(CoordinatorEntity[NetgearProAvCoordinator], BinarySe
             "duplex": first_not_none(port.get("duplexMode"), config.get("duplexMode")),
             "media_type": port.get("mediaType"),
             "stp_state": port.get("stpFwdState"),
+            "stp": {
+                "mode": stp.get("stpMode") or port.get("stpMode"),
+                "edge_port_status": stp.get("edgePortStatus"),
+                "forward_state": stp.get("forwardState") or port.get("stpFwdState"),
+                "role": stp.get("role"),
+                "protocol": self.coordinator.data.stp_config.get("protocolSpecification"),
+                "root_bridge": self.coordinator.data.stp_config.get("designatedRoot"),
+                "root_port": self.coordinator.data.stp_config.get("rootPort"),
+                "topology_changes": self.coordinator.data.stp_config.get("topChanges"),
+            },
+            "multicast": multicast,
             "pvid": config.get("pvid") or state.get("pvid"),
             "vlans": config.get("vlan") or state.get("vlan") or state.get("tagged"),
             "tagged_vlans": state.get("tagged"),

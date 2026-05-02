@@ -49,6 +49,10 @@ class NetgearProAvData:
     fiber_optics: dict[int, dict[str, Any]]
     fiber_diag: dict[int, dict[str, Any]]
     fiber_eeprom: dict[int, dict[str, Any]]
+    stp_config: dict[str, Any]
+    stp_ports: dict[int, dict[str, Any]]
+    multicast_groups: list[dict[str, Any]]
+    multicast_groups_by_port: dict[int, dict[str, Any]]
     image_info: dict[str, Any]
     stacking_info: dict[str, Any]
 
@@ -789,6 +793,25 @@ class NetgearProAvCoordinator(DataUpdateCoordinator[NetgearProAvData]):
                 fiber_eeprom = {}
 
             try:
+                stp_response = await self.client.async_stp_config()
+                stp_config = stp_response.get("stp_config", {})
+            except NetgearProAvError:
+                stp_config = {}
+
+            try:
+                stp_port_response = await self.client.async_stp_port_info()
+                stp_ports = _extract_stp_port_rows(stp_port_response)
+            except NetgearProAvError:
+                stp_ports = {}
+
+            try:
+                multicast_response = await self.client.async_multicast_groups()
+                multicast_groups = _extract_multicast_group_rows(multicast_response)
+            except NetgearProAvError:
+                multicast_groups = []
+            multicast_groups_by_port = _multicast_groups_by_port(multicast_groups)
+
+            try:
                 image_response = await self.client.async_image_info()
                 image_info = image_response.get("deviceInfo", {})
             except NetgearProAvError:
@@ -815,6 +838,10 @@ class NetgearProAvCoordinator(DataUpdateCoordinator[NetgearProAvData]):
                 fiber_optics=fiber_optics,
                 fiber_diag=fiber_diag,
                 fiber_eeprom=fiber_eeprom,
+                stp_config=stp_config,
+                stp_ports=stp_ports,
+                multicast_groups=multicast_groups,
+                multicast_groups_by_port=multicast_groups_by_port,
                 image_info=image_info,
                 stacking_info=stacking_info,
             )
@@ -1024,3 +1051,100 @@ def _extract_fiber_rows(response: dict[str, Any], key: str) -> dict[int, dict[st
             continue
         rows[int(port_id)] = row
     return rows
+
+
+def _extract_stp_port_rows(response: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """Return STP port rows keyed by port number."""
+    rows: dict[int, dict[str, Any]] = {}
+    for row in response.get("stpPortInfo", {}).get("portList", []) or []:
+        if not isinstance(row, dict):
+            continue
+        port_id = row.get("portid") or row.get("portNum") or row.get("port")
+        if port_id in (None, ""):
+            continue
+        rows[int(port_id)] = row
+    return rows
+
+
+def _extract_multicast_group_rows(response: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return sorted multicast subscriber rows."""
+    rows = [
+        row
+        for row in response.get("multicastGroups", {}).get("rows", []) or []
+        if isinstance(row, dict)
+    ]
+    return sorted(rows, key=_multicast_sort_key)
+
+
+def _multicast_groups_by_port(rows: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+    """Return compact multicast summaries keyed by physical port number."""
+    grouped_rows: dict[int, list[dict[str, Any]]] = {}
+    for row in rows:
+        port = row.get("port")
+        if port in (None, ""):
+            continue
+        try:
+            port_id = int(port)
+        except (TypeError, ValueError):
+            continue
+        grouped_rows.setdefault(port_id, []).append(row)
+
+    return {
+        port_id: {
+            "group_count": len(port_rows),
+            "vlans": _sorted_unique(row.get("vlanId") for row in port_rows),
+            "groups": _sorted_unique(
+                (row.get("multicastAddress") for row in port_rows),
+                key=_ip_sort_key,
+            ),
+            "subscribers": _sorted_unique(
+                (row.get("subscriberAddress") for row in port_rows),
+                key=_ip_sort_key,
+            ),
+            "rows": port_rows,
+        }
+        for port_id, port_rows in sorted(grouped_rows.items())
+    }
+
+
+def _multicast_sort_key(row: dict[str, Any]) -> tuple[Any, ...]:
+    """Return a stable multicast row sort key."""
+    return (
+        _number_sort_key(row.get("port")),
+        _number_sort_key(row.get("vlanId")),
+        _ip_sort_key(row.get("multicastAddress")),
+        _ip_sort_key(row.get("subscriberAddress")),
+        str(row.get("subscriberMacAddress") or "").lower(),
+        str(row.get("type") or "").lower(),
+    )
+
+
+def _sorted_unique(values: Any, key: Callable[[Any], Any] | None = None) -> list[Any]:
+    """Return unique non-empty values in a stable sorted order."""
+    unique = {
+        value
+        for value in values
+        if value not in (None, "")
+    }
+    return sorted(unique, key=key)
+
+
+def _number_sort_key(value: Any) -> tuple[int, int | str]:
+    """Sort numeric strings before non-numeric text."""
+    try:
+        return (0, int(value))
+    except (TypeError, ValueError):
+        return (1, str(value or "").lower())
+
+
+def _ip_sort_key(value: Any) -> tuple[int, tuple[int, ...] | str]:
+    """Sort IPv4 strings numerically before non-IP text."""
+    parts = str(value or "").split(".")
+    if len(parts) == 4:
+        try:
+            parsed = tuple(int(part) for part in parts)
+        except ValueError:
+            parsed = ()
+        if len(parsed) == 4 and all(0 <= part <= 255 for part in parsed):
+            return (0, parsed)
+    return (1, str(value or "").lower())
