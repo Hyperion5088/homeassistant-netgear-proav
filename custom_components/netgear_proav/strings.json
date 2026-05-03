@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "NETGEAR Pro AV Switch",
-        "description": "Add a NETGEAR Pro AV switch using the local AVUI REST API.",
+        "description": "Add a NETGEAR Pro AV switch using the local AVUI REST API.\n\nUse a dedicated switch account for Home Assistant. Avoid sharing the built-in admin account with NETGEAR Engage or browser sessions because switch API sessions can be exclusive per user.",
         "menu_options": {
           "manual": "Add one switch manually",
           "subnet_scan": "Scan a subnet"
@@ -19,7 +19,7 @@
       },
       "manual": {
         "title": "Add NETGEAR Pro AV Switch",
-        "description": "Add one switch using the local AVUI REST API. Create a dedicated switch user in the NETGEAR web UI for Home Assistant; do not share the admin account with Engage or browser sessions.",
+        "description": "Add one switch using the local AVUI REST API.\n\nCreate a dedicated switch user in the NETGEAR web UI for Home Assistant. Avoid sharing the built-in admin account with Engage or browser sessions because switch API sessions can be exclusive per user.\n\nPort controls can interrupt connected devices. Protected ports must be unlocked before Home Assistant can change admin state, PoE, or bounce/reset a port.",
         "data": {
           "host": "Host",
           "username": "Username",
@@ -34,11 +34,26 @@
           "enable_fan_mode_control": "Enable fan mode control",
           "enable_save_config": "Enable save config button",
           "enable_reboot_control": "Enable guarded reboot control"
+        },
+        "data_description": {
+          "host": "Host name or IP address for the switch local AVUI REST API.",
+          "username": "Dedicated local switch username for this integration.",
+          "password": "Password for the dedicated local switch account.",
+          "port": "REST API HTTPS port. Most NETGEAR Pro AV switches use 443.",
+          "verify_ssl": "Turn off only when using a local certificate Home Assistant cannot validate.",
+          "vlans": "Comma-separated VLAN IDs to poll for monitoring only. VLAN configuration controls are intentionally not exposed.",
+          "enable_admin_controls": "Create switches that administratively enable or disable individual ports. Protected ports must be unlocked first.",
+          "enable_poe_controls": "Create switches that enable or disable power delivery on PoE-capable ports without intentionally changing port admin state. Protected ports must be unlocked first.",
+          "enable_poe_reset": "Create buttons that briefly cycle PoE power on capable ports without intentionally disabling the data port.",
+          "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
+          "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
+          "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       },
       "subnet_scan": {
         "title": "Scan for NETGEAR Pro AV Switches",
-        "description": "Scan a subnet for switches that respond to the local AVUI REST API. Create a dedicated switch user in the NETGEAR web UI for Home Assistant; do not share the admin account with Engage or browser sessions.",
+        "description": "Scan a subnet for switches that respond to the local AVUI REST API.\n\nUse a dedicated switch account for Home Assistant. Avoid sharing the built-in admin account with Engage or browser sessions because switch API sessions can be exclusive per user.\n\nSelected control families apply to the switch you add from the scan results. Port controls can interrupt connected devices, and protected ports must be unlocked first.",
         "data": {
           "subnet": "Subnet to scan",
           "username": "Username",
@@ -53,6 +68,21 @@
           "enable_fan_mode_control": "Enable fan mode control",
           "enable_save_config": "Enable save config button",
           "enable_reboot_control": "Enable guarded reboot control"
+        },
+        "data_description": {
+          "subnet": "CIDR subnet to scan. Scans are limited to 1024 addresses.",
+          "username": "Dedicated local switch username for this integration.",
+          "password": "Password for the dedicated local switch account.",
+          "port": "REST API HTTPS port. Most NETGEAR Pro AV switches use 443.",
+          "verify_ssl": "Turn off only when using a local certificate Home Assistant cannot validate.",
+          "vlans": "Comma-separated VLAN IDs to poll for monitoring only. VLAN configuration controls are intentionally not exposed.",
+          "enable_admin_controls": "Create switches that administratively enable or disable individual ports. Protected ports must be unlocked first.",
+          "enable_poe_controls": "Create switches that enable or disable power delivery on PoE-capable ports without intentionally changing port admin state. Protected ports must be unlocked first.",
+          "enable_poe_reset": "Create buttons that briefly cycle PoE power on capable ports without intentionally disabling the data port.",
+          "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
+          "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
+          "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       },
       "subnet_pick": {
@@ -64,7 +94,7 @@
       },
       "discovery_confirm": {
         "title": "Discovered NETGEAR Pro AV Switch",
-        "description": "Confirm the discovered switch and enter its AVUI credentials. Create a dedicated switch user in the NETGEAR web UI for Home Assistant; do not share the admin account with Engage or browser sessions.",
+        "description": "Confirm the discovered switch and enter its AVUI credentials.\n\nCreate a dedicated switch user in the NETGEAR web UI for Home Assistant. Avoid sharing the built-in admin account with Engage or browser sessions because switch API sessions can be exclusive per user.\n\nPort controls can interrupt connected devices. Protected ports must be unlocked before Home Assistant can change admin state, PoE, or bounce/reset a port.",
         "data": {
           "host": "Host",
           "username": "Username",
@@ -79,11 +109,26 @@
           "enable_fan_mode_control": "Enable fan mode control",
           "enable_save_config": "Enable save config button",
           "enable_reboot_control": "Enable guarded reboot control"
+        },
+        "data_description": {
+          "host": "Host name or IP address for the discovered switch.",
+          "username": "Dedicated local switch username for this integration.",
+          "password": "Password for the dedicated local switch account.",
+          "port": "REST API HTTPS port. Most NETGEAR Pro AV switches use 443.",
+          "verify_ssl": "Turn off only when using a local certificate Home Assistant cannot validate.",
+          "vlans": "Comma-separated VLAN IDs to poll for monitoring only. VLAN configuration controls are intentionally not exposed.",
+          "enable_admin_controls": "Create switches that administratively enable or disable individual ports. Protected ports must be unlocked first.",
+          "enable_poe_controls": "Create switches that enable or disable power delivery on PoE-capable ports without intentionally changing port admin state. Protected ports must be unlocked first.",
+          "enable_poe_reset": "Create buttons that briefly cycle PoE power on capable ports without intentionally disabling the data port.",
+          "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
+          "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
+          "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       },
       "init": {
         "title": "NETGEAR Pro AV Switch options",
-        "description": "Adjust connection, polling, and guarded control settings. Use a dedicated switch user for Home Assistant; sharing the admin account with Engage or browser sessions can interrupt switch API sessions.",
+        "description": "Adjust connection, polling, and guarded control settings.\n\nUse a dedicated switch account for Home Assistant. Avoid sharing the built-in admin account with Engage or browser sessions because switch API sessions can be exclusive per user.\n\nPort controls can interrupt connected devices. Protected ports must be unlocked before Home Assistant can change admin state, PoE, or bounce/reset a port.",
         "data": {
           "host": "Host",
           "username": "Username",
@@ -102,6 +147,25 @@
           "enable_save_config": "Enable save config button",
           "enable_port_description_control": "Enable port description editing",
           "enable_reboot_control": "Enable guarded reboot control"
+        },
+        "data_description": {
+          "host": "Host name or IP address for the switch local AVUI REST API.",
+          "username": "Dedicated local switch username for this integration.",
+          "password": "Password for the dedicated local switch account.",
+          "port": "REST API HTTPS port. Most NETGEAR Pro AV switches use 443.",
+          "verify_ssl": "Turn off only when using a local certificate Home Assistant cannot validate.",
+          "scan_interval": "Polling interval in seconds. Lower values update faster but increase switch API traffic.",
+          "vlans": "Comma-separated VLAN IDs to poll for monitoring only. VLAN configuration controls are intentionally not exposed.",
+          "protection_markers": "Comma-separated words used to auto-protect ports whose LLDP neighbor or metadata looks infrastructure-facing.",
+          "auto_protect_timeout": "Seconds before a temporarily unlocked protected port is automatically locked again. Use 0 only when you do not want automatic re-protection.",
+          "enable_admin_controls": "Create switches that administratively enable or disable individual ports. Protected ports must be unlocked first.",
+          "enable_poe_controls": "Create switches that enable or disable power delivery on PoE-capable ports without intentionally changing port admin state. Protected ports must be unlocked first.",
+          "enable_poe_reset": "Create buttons that briefly cycle PoE power on capable ports without intentionally disabling the data port.",
+          "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
+          "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
+          "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_port_description_control": "Description controls use a selected target and text input to update one port description. LLDP-based description updates bypass port protection by design.",
+          "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       }
     },
