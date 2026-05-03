@@ -11,7 +11,12 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_ENABLE_FAN_MODE_CONTROL, CONF_ENABLE_REBOOT_CONTROL, DOMAIN
+from .const import (
+    CONF_ENABLE_FAN_MODE_CONTROL,
+    CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
+    CONF_ENABLE_REBOOT_CONTROL,
+    DOMAIN,
+)
 from .coordinator import NetgearProAvCoordinator
 from .helpers import device_info as build_device_info, serial
 from .options import control_option_enabled, option_enabled
@@ -31,7 +36,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up NETGEAR Pro AV select entities."""
     coordinator: NetgearProAvCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[SelectEntity] = [NetgearDescriptionTargetSelect(coordinator, entry)]
+    entities: list[SelectEntity] = []
+    if option_enabled(entry, CONF_ENABLE_PORT_DESCRIPTION_CONTROL):
+        entities.append(NetgearDescriptionTargetSelect(coordinator, entry))
     if (
         control_option_enabled(entry, CONF_ENABLE_FAN_MODE_CONTROL)
         and _fan_mode(coordinator.data.device_info) is not None
@@ -53,7 +60,7 @@ class NetgearFanModeSelect(CoordinatorEntity[NetgearProAvCoordinator], SelectEnt
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_name = "Control Fan Mode"
+    _attr_name = "Fan Mode"
     _attr_options = list(FAN_NAME_TO_MODE)
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
@@ -85,6 +92,7 @@ class NetgearFanModeSelect(CoordinatorEntity[NetgearProAvCoordinator], SelectEnt
 class NetgearDescriptionTargetSelect(CoordinatorEntity[NetgearProAvCoordinator], SelectEntity):
     """Select the port used by the manual description input."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_name = "Port Description Target"
 
@@ -118,6 +126,7 @@ class NetgearDescriptionTargetSelect(CoordinatorEntity[NetgearProAvCoordinator],
 class NetgearRebootConfirmationSelect(CoordinatorEntity[NetgearProAvCoordinator], SelectEntity):
     """Two-step reboot confirmation select."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_name = "Reboot Confirmation"
     _attr_options = ["Cancel", "Reboot"]

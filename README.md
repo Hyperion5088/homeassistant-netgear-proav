@@ -8,7 +8,7 @@ This repository is the HACS integration. The companion dashboard card is [`netge
 
 ## Status
 
-Beta. This V1.0 development release is designed to expose switch infrastructure state without creating Home Assistant network-client trackers. Guarded switch controls are available per switch and should be enabled only where they are useful, but entity names, options, and controls may still change before a stable release.
+Beta. This V1.0 development release is designed to expose switch infrastructure state without creating Home Assistant network-client trackers. Guarded write controls are optional and off by default for new switches; enable only the control families you intend to use.
 
 Current scope:
 
@@ -23,7 +23,7 @@ Current scope:
 - guarded switch reboot and Save Config controls
 - port config protection locks with LLDP/metadata-based critical-port detection and timed temporary unlocks
 - diagnostic polling controls and sensors: Full Poll, Pause Polling, Last Poll, and disabled-by-default Polls Last Minute
-- switch-level Port Descriptions diagnostic sensor with current descriptions and LLDP-derived suggestions
+- switch-level System Port Descriptions diagnostic sensor with current descriptions and LLDP-derived suggestions
 - switch-level manual port description target/input/apply controls
 - selected VLAN membership summary sensors
 - SSDP and mDNS discovery prompts when the switch advertises a matching M4250/M4300/M4350/M4500 service
@@ -79,7 +79,9 @@ Use a dedicated switch API user. NETGEAR documents sessions as exclusive per use
 
 ## Controls And Safety
 
-Write actions are exposed as guarded controls. Port admin, admin bounce, PoE enable/reset, switch reboot, Save Config, fan mode, and description updates can be enabled from the config flow or options flow.
+Write actions are exposed as guarded controls. Port admin, admin bounce, PoE enable/reset, switch reboot, Save Config, fan mode, and description updates can be enabled from the config flow or options flow. Monitoring entities are created independently of those write-control options.
+
+Operational entities use normal Home Assistant entity classification. Switch health, polling, fan speed, LLDP, and detail-heavy description summaries are diagnostic/debug entities. Protection locks, fan mode, Save Config, reboot confirmation, and description editing controls are configuration entities. Port admin, port bounce, PoE control, PoE reset, and reboot are control entities and remain behind explicit options.
 
 Port config protection is stored in Home Assistant and is intended to reduce accidental changes on infrastructure ports. Critical ports are detected from LLDP and port metadata, can be temporarily unlocked for maintenance, and automatically re-lock after the configured timeout.
 

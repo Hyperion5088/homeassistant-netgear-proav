@@ -7,14 +7,15 @@ from typing import Any
 from homeassistant.components.text import TextEntity, TextMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import CONF_ENABLE_PORT_DESCRIPTION_CONTROL, DOMAIN
 from .coordinator import NetgearProAvCoordinator
 from .helpers import device_info as build_device_info
 from .helpers import serial
+from .options import option_enabled
 
 
 async def async_setup_entry(
@@ -23,6 +24,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NETGEAR Pro AV text entities."""
+    if not option_enabled(entry, CONF_ENABLE_PORT_DESCRIPTION_CONTROL):
+        return
     coordinator: NetgearProAvCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([NetgearPortDescriptionInputText(coordinator, entry)])
 
@@ -30,6 +33,7 @@ async def async_setup_entry(
 class NetgearPortDescriptionInputText(CoordinatorEntity[NetgearProAvCoordinator], TextEntity):
     """Single manual description input for the selected port."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_mode = TextMode.TEXT
     _attr_name = "Port Description Input"

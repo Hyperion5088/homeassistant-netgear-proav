@@ -161,6 +161,7 @@ def _registry_metadata_updates(
     names_by_suffix = {
         "_cpu_usage": "System CPU Usage",
         "_memory_usage": "System Memory Usage",
+        "_active_ports": "Active Ports",
         "_uptime": "System Uptime",
         "_temperature": "System Temperature",
         "_poe_available": "System PoE Available",
@@ -171,12 +172,14 @@ def _registry_metadata_updates(
         "_full_poll": "System Full Poll",
         "_port_flap_events": "System Port Flap Events",
         "_pause_polling": "System Pause Polling",
+        "_port_descriptions": "System Port Descriptions",
     }
     for suffix, name in names_by_suffix.items():
         if entity_id.endswith(suffix):
             updates["original_name"] = name
             break
     normal_entity_patterns = (
+        r"_active_ports$",
         r"_fan_\d+_speed$",
         r"_vlan_\d+_member_ports$",
         r"_admin_control_(?:\d+_)+\d+$",
@@ -193,7 +196,7 @@ def _registry_metadata_updates(
         (r"_poe_state_((?:\d+_)+\d+)$", "{port} PoE State"),
         (r"_admin_control_((?:\d+_)+\d+)$", "{port} Admin Control"),
         (r"_admin_bounce_((?:\d+_)+\d+)$", "{port} Admin Bounce"),
-        (r"_poe_switch_((?:\d+_)+\d+)$", "{port} PoE Switch"),
+        (r"_poe_switch_((?:\d+_)+\d+)$", "{port} PoE Control"),
         (r"_poe_reset_((?:\d+_)+\d+)$", "{port} PoE Reset"),
         (r"_port_protection_((?:\d+_)+\d+)$", "{port} Protection"),
         (r"_port_config_protection_((?:\d+_)+\d+)$", "{port} Protection"),

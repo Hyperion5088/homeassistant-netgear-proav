@@ -205,7 +205,7 @@ class NetgearPortPoeSwitch(NetgearPortControlBase):
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
         state = coordinator.data.port_states.get(port_id, {})
-        self._attr_name = f"{port_display_name(port_id, port, config, state)} PoE Switch"
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} PoE Control"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_poe_enabled"
 

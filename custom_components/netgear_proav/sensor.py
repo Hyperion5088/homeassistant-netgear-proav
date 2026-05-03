@@ -391,7 +391,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="active_ports",
         translation_key="active_ports",
-        name="Switch Active Ports",
+        name="Active Ports",
         value_fn=_active_ports,
     ),
     NetgearSummaryDescription(
@@ -624,7 +624,8 @@ class NetgearPortDescriptionsSensor(NetgearBaseEntity, SensorEntity):
     """Switch-level port description diagnostic sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Port Descriptions"
+    _attr_entity_registry_enabled_default = False
+    _attr_name = "System Port Descriptions"
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""

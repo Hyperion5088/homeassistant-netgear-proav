@@ -21,6 +21,7 @@ from .const import (
     CONF_ENABLE_ADMIN_BOUNCE,
     CONF_ENABLE_ADMIN_CONTROLS,
     CONF_ENABLE_FAN_MODE_CONTROL,
+    CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
     CONF_ENABLE_REBOOT_CONTROL,
     CONF_ENABLE_SAVE_CONFIG,
     CONF_ENABLE_POE_CONTROLS,
@@ -135,6 +136,10 @@ def _control_schema_fields() -> dict[Any, Any]:
         vol.Optional(
             CONF_ENABLE_SAVE_CONFIG,
             default=defaults[CONF_ENABLE_SAVE_CONFIG],
+        ): bool,
+        vol.Optional(
+            CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
+            default=defaults[CONF_ENABLE_PORT_DESCRIPTION_CONTROL],
         ): bool,
         vol.Optional(
             CONF_ENABLE_REBOOT_CONTROL,
@@ -444,6 +449,7 @@ class NetgearProAvOptionsFlow(config_entries.OptionsFlow):
                         CONF_ENABLE_ADMIN_BOUNCE: user_input[CONF_ENABLE_ADMIN_BOUNCE],
                         CONF_ENABLE_FAN_MODE_CONTROL: user_input[CONF_ENABLE_FAN_MODE_CONTROL],
                         CONF_ENABLE_SAVE_CONFIG: user_input[CONF_ENABLE_SAVE_CONFIG],
+                        CONF_ENABLE_PORT_DESCRIPTION_CONTROL: user_input[CONF_ENABLE_PORT_DESCRIPTION_CONTROL],
                         CONF_ENABLE_REBOOT_CONTROL: user_input[CONF_ENABLE_REBOOT_CONTROL],
                     },
                 )
@@ -514,6 +520,10 @@ class NetgearProAvOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_ENABLE_SAVE_CONFIG,
                     default=option_enabled(self._config_entry, CONF_ENABLE_SAVE_CONFIG),
+                ): bool,
+                vol.Optional(
+                    CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
+                    default=option_enabled(self._config_entry, CONF_ENABLE_PORT_DESCRIPTION_CONTROL),
                 ): bool,
                 vol.Optional(
                     CONF_ENABLE_REBOOT_CONTROL,

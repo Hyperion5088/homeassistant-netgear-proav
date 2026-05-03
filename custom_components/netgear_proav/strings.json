@@ -33,6 +33,7 @@
           "enable_admin_bounce": "Enable port admin bounce buttons",
           "enable_fan_mode_control": "Enable fan mode control",
           "enable_save_config": "Enable save config button",
+          "enable_port_description_control": "Enable port description editing",
           "enable_reboot_control": "Enable guarded reboot control"
         },
         "data_description": {
@@ -48,6 +49,7 @@
           "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
           "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
           "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_port_description_control": "Create configuration controls that can update port descriptions from LLDP suggestions or from a selected target and text input.",
           "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       },
@@ -67,6 +69,7 @@
           "enable_admin_bounce": "Enable port admin bounce buttons",
           "enable_fan_mode_control": "Enable fan mode control",
           "enable_save_config": "Enable save config button",
+          "enable_port_description_control": "Enable port description editing",
           "enable_reboot_control": "Enable guarded reboot control"
         },
         "data_description": {
@@ -82,6 +85,7 @@
           "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
           "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
           "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_port_description_control": "Create configuration controls that can update port descriptions from LLDP suggestions or from a selected target and text input.",
           "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       },
@@ -108,6 +112,7 @@
           "enable_admin_bounce": "Enable port admin bounce buttons",
           "enable_fan_mode_control": "Enable fan mode control",
           "enable_save_config": "Enable save config button",
+          "enable_port_description_control": "Enable port description editing",
           "enable_reboot_control": "Enable guarded reboot control"
         },
         "data_description": {
@@ -123,6 +128,7 @@
           "enable_admin_bounce": "Create buttons that briefly disable and re-enable a port admin state. Protected ports must be unlocked first.",
           "enable_fan_mode_control": "Create a configuration select for switch fan mode where the switch exposes that setting.",
           "enable_save_config": "Create a button that saves the running switch configuration to persistent storage.",
+          "enable_port_description_control": "Create configuration controls that can update port descriptions from LLDP suggestions or from a selected target and text input.",
           "enable_reboot_control": "Create a reboot button protected by a confirmation selector. Reboot remains unavailable until confirmation is armed."
         }
       },

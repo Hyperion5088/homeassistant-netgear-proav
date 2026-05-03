@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     CONF_ENABLE_ADMIN_BOUNCE,
+    CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
     CONF_ENABLE_POE_RESET,
     CONF_ENABLE_REBOOT_CONTROL,
     CONF_ENABLE_SAVE_CONFIG,
@@ -47,8 +48,9 @@ async def async_setup_entry(
     entities: list[ButtonEntity] = [NetgearFullPollButton(coordinator, entry)]
     if option_enabled(entry, CONF_ENABLE_SAVE_CONFIG):
         entities.append(NetgearSaveConfigButton(coordinator, entry))
-    entities.append(NetgearUpdateDescriptionsButton(coordinator, entry))
-    entities.append(NetgearSetSelectedDescriptionButton(coordinator, entry))
+    if option_enabled(entry, CONF_ENABLE_PORT_DESCRIPTION_CONTROL):
+        entities.append(NetgearUpdateDescriptionsButton(coordinator, entry))
+        entities.append(NetgearSetSelectedDescriptionButton(coordinator, entry))
     if option_enabled(entry, CONF_ENABLE_REBOOT_CONTROL):
         entities.append(NetgearRebootButton(coordinator, entry))
     port_ids = sorted(set(coordinator.data.ports) | set(coordinator.data.port_configs), key=port_sort_key)
@@ -161,6 +163,7 @@ class NetgearFullPollButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEn
 class NetgearSaveConfigButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEntity):
     """Save the running switch configuration."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_name = "Save Config"
 
@@ -191,6 +194,7 @@ class NetgearSaveConfigButton(CoordinatorEntity[NetgearProAvCoordinator], Button
 class NetgearUpdateDescriptionsButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEntity):
     """Apply all clear LLDP-derived port description suggestions."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_name = "Update Port Descriptions"
 
@@ -246,6 +250,7 @@ class NetgearUpdateDescriptionsButton(CoordinatorEntity[NetgearProAvCoordinator]
 class NetgearSetSelectedDescriptionButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEntity):
     """Apply the manual description input to the selected port."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
     _attr_name = "Set Port Description"
 
@@ -285,8 +290,9 @@ class NetgearSetSelectedDescriptionButton(CoordinatorEntity[NetgearProAvCoordina
 class NetgearRebootButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEntity):
     """Reboot the switch after two-step confirmation."""
 
+    _attr_entity_registry_enabled_default = False
     _attr_has_entity_name = True
-    _attr_name = "Reboot Switch"
+    _attr_name = "Reboot"
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the button."""
