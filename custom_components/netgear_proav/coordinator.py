@@ -632,6 +632,10 @@ class NetgearProAvCoordinator(DataUpdateCoordinator[NetgearProAvData]):
                 fiber_optics=self._last_data.fiber_optics,
                 fiber_diag=self._last_data.fiber_diag,
                 fiber_eeprom=self._last_data.fiber_eeprom,
+                stp_config=self._last_data.stp_config,
+                stp_ports=self._last_data.stp_ports,
+                multicast_groups=self._last_data.multicast_groups,
+                multicast_groups_by_port=self._last_data.multicast_groups_by_port,
                 image_info=self._last_data.image_info,
                 stacking_info=self._last_data.stacking_info,
             )

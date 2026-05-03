@@ -27,7 +27,7 @@
       "modelName": "M4500*"
     }
   ],
-  "version": "1.0.2",
+  "version": "1.0.3",
   "zeroconf": [
     {
       "type": "_http._tcp.local.",
