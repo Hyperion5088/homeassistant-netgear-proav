@@ -8,7 +8,7 @@ This repository is the HACS integration. The companion dashboard card is [`netge
 
 ## Status
 
-This V1.0 release is designed to expose switch infrastructure state without creating Home Assistant network-client trackers. Guarded switch controls are available per switch and should be enabled only where they are useful.
+Beta. This V1.0 development release is designed to expose switch infrastructure state without creating Home Assistant network-client trackers. Guarded switch controls are available per switch and should be enabled only where they are useful, but entity names, options, and controls may still change before a stable release.
 
 Current scope:
 
