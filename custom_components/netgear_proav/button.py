@@ -28,8 +28,8 @@ from .description import (
 from .helpers import device_info as build_device_info
 from .helpers import first_not_none, power_watts
 from .helpers import (
+    port_display_name,
     port_identity,
-    port_label,
     port_sort_key,
     serial,
     should_expose_port,
@@ -139,7 +139,7 @@ class NetgearFullPollButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEn
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
-    _attr_name = "Full Poll"
+    _attr_name = "System Full Poll"
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the button."""
@@ -331,7 +331,8 @@ class NetgearPoeResetButton(CoordinatorEntity[NetgearProAvCoordinator], ButtonEn
         self.port_id = port_id
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
-        self._attr_name = f"PoE Reset {port_label(port or config, port_id)}"
+        state = coordinator.data.port_states.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} PoE Reset"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_poe_reset"
 
@@ -375,7 +376,8 @@ class NetgearAdminBounceButton(CoordinatorEntity[NetgearProAvCoordinator], Butto
         self.port_id = port_id
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
-        self._attr_name = f"Admin Bounce {port_label(port or config, port_id)}"
+        state = coordinator.data.port_states.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} Admin Bounce"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_admin_bounce"
 

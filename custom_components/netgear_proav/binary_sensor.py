@@ -25,8 +25,8 @@ from .helpers import (
     first_not_none,
     lag_member_ports,
     link_up,
+    port_display_name,
     port_identity,
-    port_label,
     port_sort_key,
     serial,
     should_expose_port,
@@ -328,7 +328,10 @@ class NetgearPortLinkSensor(CoordinatorEntity[NetgearProAvCoordinator], BinarySe
         self.entry = entry
         self.port_id = port_id
         port = coordinator.data.ports.get(port_id, {})
-        self._attr_name = f"Link State {port_label(port, port_id)}"
+        config = coordinator.data.port_configs.get(port_id, {})
+        state = coordinator.data.port_states.get(port_id, {})
+        optics = coordinator.data.fiber_optics.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state, optics)} Link State"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}"
 

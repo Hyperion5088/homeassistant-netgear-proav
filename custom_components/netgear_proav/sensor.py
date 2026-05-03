@@ -33,6 +33,7 @@ from .helpers import (
     mac_address,
     model,
     percent,
+    port_display_name,
     port_identity,
     port_label,
     port_sort_key,
@@ -368,7 +369,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="cpu_usage",
         translation_key="cpu_usage",
-        name="CPU Usage",
+        name="System CPU Usage",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _first_not_none(
@@ -379,7 +380,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="memory_usage",
         translation_key="memory_usage",
-        name="Memory Usage",
+        name="System Memory Usage",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _first_not_none(
@@ -396,7 +397,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="uptime",
         translation_key="uptime",
-        name="Uptime",
+        name="System Uptime",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _uptime_display(
             _switch_details(data.device_info).get("upTime") or data.device_info.get("upTime")
@@ -405,9 +406,10 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="temperature",
         translation_key="temperature",
-        name="Switch Temperature",
+        name="System Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement="°C",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: _temperature(data.device_info),
     ),
     NetgearSummaryDescription(
@@ -421,7 +423,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="poe_available",
         translation_key="poe_available",
-        name="PoE Available",
+        name="System PoE Available",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -430,7 +432,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="poe_threshold",
         translation_key="poe_threshold",
-        name="PoE Threshold",
+        name="System PoE Threshold",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -439,7 +441,7 @@ SUMMARY_DESCRIPTIONS: tuple[NetgearSummaryDescription, ...] = (
     NetgearSummaryDescription(
         key="lldp_neighbors",
         translation_key="lldp_neighbors",
-        name="LLDP Neighbors",
+        name="System LLDP Neighbors",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: len(_unique_neighbors(data.neighbors)),
     ),
@@ -560,7 +562,7 @@ class NetgearLastPollSensor(NetgearBaseEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_name = "Last Poll"
+    _attr_name = "System Last Poll"
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
@@ -592,7 +594,7 @@ class NetgearPollRateSensor(NetgearBaseEntity, SensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
-    _attr_name = "Polls Last Minute"
+    _attr_name = "System Polls Last Minute"
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
@@ -714,7 +716,7 @@ class NetgearPortFlapSensor(NetgearBaseEntity, SensorEntity):
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, entry)
-        self._attr_name = "Port Flap Events"
+        self._attr_name = "System Port Flap Events"
         switch_serial = _serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_flap_events"
 
@@ -746,7 +748,8 @@ class NetgearPortPoeSensor(NetgearBaseEntity, SensorEntity):
         self.port_id = port_id
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
-        self._attr_name = f"PoE State {port_label(port or config, port_id)}"
+        state = coordinator.data.port_states.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} PoE State"
         switch_serial = _serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_poe_power"
 
@@ -793,7 +796,8 @@ class NetgearFanSpeedSensor(NetgearBaseEntity, SensorEntity):
         super().__init__(coordinator, entry)
         self.fan_id = fan_id
         fan = self._fan_row
-        self._attr_name = f"Fan {fan.get('desc') or fan_id} Speed"
+        self._attr_name = f"System Fan {fan.get('desc') or fan_id} Speed"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         switch_serial = _serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_fan_{fan_id}_speed"
 

@@ -16,8 +16,8 @@ from .coordinator import POLL_PAUSE_SECONDS, NetgearProAvCoordinator
 from .helpers import (
     device_info as build_device_info,
     first_not_none,
+    port_display_name,
     port_identity,
-    port_label,
     port_sort_key,
     power_watts,
     serial,
@@ -91,7 +91,7 @@ class NetgearPollingPauseSwitch(CoordinatorEntity[NetgearProAvCoordinator], Swit
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Pause Polling"
+    _attr_name = "System Pause Polling"
 
     def __init__(self, coordinator: NetgearProAvCoordinator, entry: ConfigEntry) -> None:
         """Initialize the switch."""
@@ -173,7 +173,8 @@ class NetgearPortAdminSwitch(NetgearPortControlBase):
         super().__init__(coordinator, entry, port_id)
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
-        self._attr_name = f"Admin Control {port_label(port or config, port_id)}"
+        state = coordinator.data.port_states.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} Admin Control"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_admin_enabled"
 
@@ -203,7 +204,8 @@ class NetgearPortPoeSwitch(NetgearPortControlBase):
         super().__init__(coordinator, entry, port_id)
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
-        self._attr_name = f"PoE Switch {port_label(port or config, port_id)}"
+        state = coordinator.data.port_states.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} PoE Switch"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_poe_enabled"
 

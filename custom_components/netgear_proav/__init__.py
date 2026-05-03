@@ -24,6 +24,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import NetgearProAvCoordinator
+from .helpers import port_display_name
 from .options import auto_protect_timeout
 
 PLATFORMS: list[Platform] = [
@@ -88,6 +89,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 def _async_migrate_entity_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Shorten old generated NETGEAR control entity IDs."""
     registry = er.async_get(hass)
+    coordinator: NetgearProAvCoordinator | None = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     for entity in list(registry.entities.values()):
         if entity.config_entry_id != entry.entry_id or entity.platform != DOMAIN:
             continue
@@ -130,6 +132,7 @@ def _async_migrate_entity_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
             (r"^(button\..+)_port_((?:\d+_)+\d+)_4_poe_reset$", r"\1_poe_reset_\2"),
             (r"^(lock\..+)_control_port_((?:\d+_)+\d+)_lock$", r"\1_port_config_protection_\2"),
             (r"^(lock\..+)_port_lock_((?:\d+_)+\d+)$", r"\1_port_config_protection_\2"),
+            (r"^(lock\..+)_port_config_protection_((?:\d+_)+\d+)$", r"\1_port_protection_\2"),
         )
         for pattern, replacement in port_group_patterns:
             migrated_entity_id = re.sub(pattern, replacement, new_entity_id)
@@ -139,7 +142,7 @@ def _async_migrate_entity_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if "_control_port_" in new_entity_id and new_entity_id.endswith("_poe"):
             prefix, port_suffix = new_entity_id.rsplit("_control_port_", 1)
             new_entity_id = f"{prefix}_poe_switch_{port_suffix.removesuffix('_poe')}"
-        updates = _registry_metadata_updates(new_entity_id)
+        updates = _registry_metadata_updates(new_entity_id, entity.unique_id, coordinator)
         if new_entity_id != entity_id:
             if registry.async_get(new_entity_id) is not None:
                 continue
@@ -148,19 +151,26 @@ def _async_migrate_entity_ids(hass: HomeAssistant, entry: ConfigEntry) -> None:
             registry.async_update_entity(entity_id, **updates)
 
 
-def _registry_metadata_updates(entity_id: str) -> dict[str, object | None]:
+def _registry_metadata_updates(
+    entity_id: str,
+    unique_id: str | None,
+    coordinator: NetgearProAvCoordinator | None,
+) -> dict[str, object | None]:
     """Return registry metadata fixes for existing NETGEAR entities."""
     updates: dict[str, object | None] = {}
     names_by_suffix = {
-        "_cpu_usage": "CPU Usage",
-        "_memory_usage": "Memory Usage",
-        "_uptime": "Uptime",
-        "_poe_available": "PoE Available",
-        "_poe_threshold": "PoE Threshold",
-        "_lldp_neighbors": "LLDP Neighbors",
-        "_full_poll": "Full Poll",
-        "_port_flap_events": "Port Flap Events",
-        "_pause_polling": "Pause Polling",
+        "_cpu_usage": "System CPU Usage",
+        "_memory_usage": "System Memory Usage",
+        "_uptime": "System Uptime",
+        "_temperature": "System Temperature",
+        "_poe_available": "System PoE Available",
+        "_poe_threshold": "System PoE Threshold",
+        "_lldp_neighbors": "System LLDP Neighbors",
+        "_last_poll": "System Last Poll",
+        "_polls_last_minute": "System Polls Last Minute",
+        "_full_poll": "System Full Poll",
+        "_port_flap_events": "System Port Flap Events",
+        "_pause_polling": "System Pause Polling",
     }
     for suffix, name in names_by_suffix.items():
         if entity_id.endswith(suffix):
@@ -178,9 +188,48 @@ def _registry_metadata_updates(entity_id: str) -> dict[str, object | None]:
         updates["entity_category"] = None
     elif entity_id.endswith(tuple(names_by_suffix)):
         updates["entity_category"] = EntityCategory.DIAGNOSTIC
-    if match := re.search(r"_port_config_protection_((?:\d+_)+\d+)$", entity_id):
-        updates["original_name"] = f"Port Config Protection {_port_label_from_entity_suffix(match.group(1))}"
+    port_names_by_pattern = (
+        (r"_link_state_((?:\d+_)+\d+)$", "{port} Link State"),
+        (r"_poe_state_((?:\d+_)+\d+)$", "{port} PoE State"),
+        (r"_admin_control_((?:\d+_)+\d+)$", "{port} Admin Control"),
+        (r"_admin_bounce_((?:\d+_)+\d+)$", "{port} Admin Bounce"),
+        (r"_poe_switch_((?:\d+_)+\d+)$", "{port} PoE Switch"),
+        (r"_poe_reset_((?:\d+_)+\d+)$", "{port} PoE Reset"),
+        (r"_port_protection_((?:\d+_)+\d+)$", "{port} Protection"),
+        (r"_port_config_protection_((?:\d+_)+\d+)$", "{port} Protection"),
+    )
+    for pattern, template in port_names_by_pattern:
+        if match := re.search(pattern, entity_id):
+            updates["original_name"] = template.format(
+                port=_port_display_from_registry(match.group(1), unique_id, coordinator)
+            )
+            break
     return updates
+
+
+def _port_display_from_registry(
+    suffix: str,
+    unique_id: str | None,
+    coordinator: NetgearProAvCoordinator | None,
+) -> str:
+    """Return the best available display label for an existing port entity."""
+    port_id = _port_id_from_unique_id(unique_id)
+    if port_id is not None and coordinator is not None:
+        port = coordinator.data.ports.get(port_id, {})
+        config = coordinator.data.port_configs.get(port_id, {})
+        state = coordinator.data.port_states.get(port_id, {})
+        optics = coordinator.data.fiber_optics.get(port_id, {})
+        return port_display_name(port_id, port, config, state, optics)
+    return f"Port {_port_label_from_entity_suffix(suffix)}"
+
+
+def _port_id_from_unique_id(unique_id: str | None) -> int | None:
+    """Return the numeric port id encoded in a NETGEAR port entity unique id."""
+    if not unique_id:
+        return None
+    if match := re.search(r"_port_(\d+)(?:_|$)", unique_id):
+        return int(match.group(1))
+    return None
 
 
 def _port_label_from_entity_suffix(suffix: str) -> str:

@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import NetgearProAvCoordinator
 from .helpers import device_info as build_device_info
-from .helpers import port_identity, port_label, port_sort_key, serial, should_expose_port
+from .helpers import port_display_name, port_identity, port_sort_key, serial, should_expose_port
 from .options import any_port_controls_enabled
 
 
@@ -55,7 +55,8 @@ class NetgearPortControlLock(CoordinatorEntity[NetgearProAvCoordinator], LockEnt
         self.port_id = port_id
         port = coordinator.data.ports.get(port_id, {})
         config = coordinator.data.port_configs.get(port_id, {})
-        self._attr_name = f"Port Config Protection {port_label(port or config, port_id)}"
+        state = coordinator.data.port_states.get(port_id, {})
+        self._attr_name = f"{port_display_name(port_id, port, config, state)} Protection"
         switch_serial = serial(coordinator.data.device_info, entry.entry_id)
         self._attr_unique_id = f"{switch_serial}_port_{port_id}_control_lock"
 

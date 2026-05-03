@@ -157,6 +157,35 @@ def port_label(port: dict[str, Any], port_id: int) -> str:
     return str(port.get("portStr") or port.get("portName") or port.get("port") or port_id)
 
 
+def port_connector_prefix(*rows: dict[str, Any]) -> str:
+    """Return the display prefix for a copper or optical switch port."""
+    for row in rows:
+        for key in (
+            "mediaType",
+            "portType",
+            "physicalMode",
+            "type",
+            "connector",
+            "possibleSpeedDetected",
+        ):
+            text = str(row.get(key) or "").strip().lower()
+            if not text:
+                continue
+            if "qsfp" in text:
+                return "QSFP"
+            if "sfp+" in text or ("10g" in text and "sfp" in text):
+                return "SFP+"
+            if "sfp" in text or "fiber" in text or "fibre" in text or "optical" in text:
+                return "SFP"
+    return "Port"
+
+
+def port_display_name(port_id: int, *rows: dict[str, Any]) -> str:
+    """Return a grouped Home Assistant display name for a physical port."""
+    source = next((row for row in rows if row), {})
+    return f"{port_connector_prefix(*rows)} {port_label(source, port_id)}"
+
+
 def port_identity(port: dict[str, Any], config: dict[str, Any] | None, port_id: int) -> dict[str, Any]:
     """Return stack-aware identity fields for a physical port."""
     config = config or {}
