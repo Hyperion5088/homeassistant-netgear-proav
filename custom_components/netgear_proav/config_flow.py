@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import NetgearProAvAuthError, NetgearProAvClient, NetgearProAvError
@@ -43,11 +44,65 @@ from .const import (
     DOMAIN,
 )
 from .helpers import first_detail, switch_name
-from .options import auto_protect_timeout, control_option_enabled, default_control_options, option_enabled
+from .options import (
+    auto_protect_timeout,
+    control_option_enabled,
+    default_control_options,
+    option_enabled,
+)
+
+SECTION_CONNECTION_SETTINGS = "connection_settings"
+SECTION_DISCOVERY_SETTINGS = "discovery_settings"
+SECTION_MONITORING_SETTINGS = "monitoring_settings"
+SECTION_PROTECTION_SETTINGS = "protection_settings"
+SECTION_PORT_CONTROLS = "port_controls"
+SECTION_SWITCH_MAINTENANCE = "switch_maintenance"
+
+SECTION_OPTION_KEYS = {
+    SECTION_CONNECTION_SETTINGS: {
+        CONF_HOST,
+        CONF_USERNAME,
+        CONF_PASSWORD,
+        CONF_PORT,
+        CONF_VERIFY_SSL,
+    },
+    SECTION_DISCOVERY_SETTINGS: {
+        CONF_SUBNET,
+        CONF_USERNAME,
+        CONF_PASSWORD,
+        CONF_PORT,
+        CONF_VERIFY_SSL,
+    },
+    SECTION_MONITORING_SETTINGS: {
+        CONF_SCAN_INTERVAL,
+        CONF_VLANS,
+    },
+    SECTION_PROTECTION_SETTINGS: {
+        CONF_PROTECTION_MARKERS,
+        CONF_AUTO_PROTECT_TIMEOUT,
+    },
+    SECTION_PORT_CONTROLS: {
+        CONF_ENABLE_ADMIN_CONTROLS,
+        CONF_ENABLE_POE_CONTROLS,
+        CONF_ENABLE_POE_RESET,
+        CONF_ENABLE_ADMIN_BOUNCE,
+        CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
+    },
+    SECTION_SWITCH_MAINTENANCE: {
+        CONF_ENABLE_FAN_MODE_CONTROL,
+        CONF_ENABLE_SAVE_CONFIG,
+        CONF_ENABLE_REBOOT_CONTROL,
+    },
+}
 
 
-def _parse_vlans(value: str) -> list[int]:
+def _parse_vlans(value: str | list[int]) -> list[int]:
     """Parse a comma-separated VLAN list."""
+    if isinstance(value, list):
+        vlans = [int(vlan) for vlan in value]
+        if any(vlan < 1 or vlan > 4094 for vlan in vlans):
+            raise ValueError
+        return vlans
     vlans: list[int] = []
     for raw in value.split(","):
         raw = raw.strip()
@@ -65,10 +120,14 @@ def _vlans_to_string(vlans: list[int]) -> str:
     return ", ".join(str(vlan) for vlan in vlans)
 
 
-def _parse_markers(value: str) -> list[str]:
+def _parse_markers(value: str | list[str]) -> list[str]:
     """Parse comma-separated protection markers."""
+    if isinstance(value, list):
+        values = value
+    else:
+        values = value.split(",")
     markers: list[str] = []
-    for raw in value.split(","):
+    for raw in values:
         marker = raw.strip().lower()
         if marker and marker not in markers:
             markers.append(marker)
@@ -82,35 +141,72 @@ def _markers_to_string(markers: list[str]) -> str:
 
 def _setup_schema(host: str | None = None) -> vol.Schema:
     """Return the setup form schema."""
-    fields: dict[Any, Any] = {
-        vol.Required(CONF_HOST, default=host) if host else vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-        vol.Optional(CONF_VLANS, default=DEFAULT_VLANS): str,
-        **_control_schema_fields(),
-    }
-    return vol.Schema(fields)
+    return vol.Schema(
+        {
+            vol.Required(SECTION_CONNECTION_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST, default=host)
+                        if host
+                        else vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_USERNAME): str,
+                        vol.Required(CONF_PASSWORD): str,
+                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_MONITORING_SETTINGS): section(
+                vol.Schema({vol.Optional(CONF_VLANS, default=DEFAULT_VLANS): str}),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_PORT_CONTROLS): section(
+                vol.Schema(_port_control_schema_fields()),
+                {"collapsed": True},
+            ),
+            vol.Optional(SECTION_SWITCH_MAINTENANCE): section(
+                vol.Schema(_switch_maintenance_schema_fields()),
+                {"collapsed": True},
+            ),
+        }
+    )
 
 
 def _subnet_scan_schema() -> vol.Schema:
     """Return the subnet scan form schema."""
     return vol.Schema(
         {
-            vol.Required(CONF_SUBNET, default=DEFAULT_SCAN_SUBNET): str,
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-            vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
-            vol.Optional(CONF_VLANS, default=DEFAULT_VLANS): str,
-            **_control_schema_fields(),
+            vol.Required(SECTION_DISCOVERY_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_SUBNET, default=DEFAULT_SCAN_SUBNET): str,
+                        vol.Required(CONF_USERNAME): str,
+                        vol.Required(CONF_PASSWORD): str,
+                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_MONITORING_SETTINGS): section(
+                vol.Schema({vol.Optional(CONF_VLANS, default=DEFAULT_VLANS): str}),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_PORT_CONTROLS): section(
+                vol.Schema(_port_control_schema_fields()),
+                {"collapsed": True},
+            ),
+            vol.Optional(SECTION_SWITCH_MAINTENANCE): section(
+                vol.Schema(_switch_maintenance_schema_fields()),
+                {"collapsed": True},
+            ),
         }
     )
 
 
-def _control_schema_fields() -> dict[Any, Any]:
-    """Return control option fields shared by add and scan flows."""
+def _port_control_schema_fields() -> dict[Any, Any]:
+    """Return port control option fields shared by add and scan flows."""
     defaults = default_control_options()
     return {
         vol.Optional(
@@ -130,16 +226,23 @@ def _control_schema_fields() -> dict[Any, Any]:
             default=defaults[CONF_ENABLE_ADMIN_BOUNCE],
         ): bool,
         vol.Optional(
+            CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
+            default=defaults[CONF_ENABLE_PORT_DESCRIPTION_CONTROL],
+        ): bool,
+    }
+
+
+def _switch_maintenance_schema_fields() -> dict[Any, Any]:
+    """Return switch maintenance option fields shared by add and scan flows."""
+    defaults = default_control_options()
+    return {
+        vol.Optional(
             CONF_ENABLE_FAN_MODE_CONTROL,
             default=defaults[CONF_ENABLE_FAN_MODE_CONTROL],
         ): bool,
         vol.Optional(
             CONF_ENABLE_SAVE_CONFIG,
             default=defaults[CONF_ENABLE_SAVE_CONFIG],
-        ): bool,
-        vol.Optional(
-            CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
-            default=defaults[CONF_ENABLE_PORT_DESCRIPTION_CONTROL],
         ): bool,
         vol.Optional(
             CONF_ENABLE_REBOOT_CONTROL,
@@ -150,8 +253,126 @@ def _control_schema_fields() -> dict[Any, Any]:
 
 def _control_options_from_input(user_input: dict[str, Any]) -> dict[str, bool]:
     """Return control options selected during setup."""
+    user_input = _flatten_section_options(user_input)
     defaults = default_control_options()
     return {key: bool(user_input.get(key, value)) for key, value in defaults.items()}
+
+
+def _flatten_section_options(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Flatten Home Assistant section input into config and option keys."""
+    flat_input = dict(user_input)
+    for section_key, option_keys in SECTION_OPTION_KEYS.items():
+        section_options = flat_input.pop(section_key, {})
+        if not isinstance(section_options, dict):
+            continue
+        for option_key in option_keys:
+            if option_key in section_options:
+                flat_input[option_key] = section_options[option_key]
+    return flat_input
+
+
+def _options_schema(data: dict[str, Any], entry: config_entries.ConfigEntry) -> vol.Schema:
+    """Return grouped options schema."""
+    return vol.Schema(
+        {
+            vol.Required(SECTION_CONNECTION_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST, default=data.get(CONF_HOST, "")): str,
+                        vol.Required(CONF_USERNAME, default=data.get(CONF_USERNAME, "")): str,
+                        vol.Required(CONF_PASSWORD, default=data.get(CONF_PASSWORD, "")): str,
+                        vol.Optional(CONF_PORT, default=data.get(CONF_PORT, DEFAULT_PORT)): int,
+                        vol.Optional(
+                            CONF_VERIFY_SSL,
+                            default=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                        ): bool,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_MONITORING_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_SCAN_INTERVAL,
+                            default=data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS),
+                        ): vol.All(int, vol.Range(min=30, max=3600)),
+                        vol.Optional(
+                            CONF_VLANS,
+                            default=_vlans_to_string(data.get(CONF_VLANS, [])),
+                        ): str,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_PROTECTION_SETTINGS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_PROTECTION_MARKERS,
+                            default=_markers_to_string(
+                                data[CONF_PROTECTION_MARKERS]
+                                if data.get(CONF_PROTECTION_MARKERS)
+                                else list(CRITICAL_NEIGHBOR_MARKERS)
+                            )
+                            or DEFAULT_PROTECTION_MARKERS,
+                        ): str,
+                        vol.Optional(
+                            CONF_AUTO_PROTECT_TIMEOUT,
+                            default=auto_protect_timeout(entry),
+                        ): vol.All(int, vol.Range(min=0, max=86400)),
+                    }
+                ),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_PORT_CONTROLS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_ENABLE_ADMIN_CONTROLS,
+                            default=control_option_enabled(entry, CONF_ENABLE_ADMIN_CONTROLS),
+                        ): bool,
+                        vol.Optional(
+                            CONF_ENABLE_POE_CONTROLS,
+                            default=control_option_enabled(entry, CONF_ENABLE_POE_CONTROLS),
+                        ): bool,
+                        vol.Optional(
+                            CONF_ENABLE_POE_RESET,
+                            default=control_option_enabled(entry, CONF_ENABLE_POE_RESET),
+                        ): bool,
+                        vol.Optional(
+                            CONF_ENABLE_ADMIN_BOUNCE,
+                            default=control_option_enabled(entry, CONF_ENABLE_ADMIN_BOUNCE),
+                        ): bool,
+                        vol.Optional(
+                            CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
+                            default=option_enabled(entry, CONF_ENABLE_PORT_DESCRIPTION_CONTROL),
+                        ): bool,
+                    }
+                ),
+                {"collapsed": False},
+            ),
+            vol.Optional(SECTION_SWITCH_MAINTENANCE): section(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_ENABLE_FAN_MODE_CONTROL,
+                            default=control_option_enabled(entry, CONF_ENABLE_FAN_MODE_CONTROL),
+                        ): bool,
+                        vol.Optional(
+                            CONF_ENABLE_SAVE_CONFIG,
+                            default=option_enabled(entry, CONF_ENABLE_SAVE_CONFIG),
+                        ): bool,
+                        vol.Optional(
+                            CONF_ENABLE_REBOOT_CONTROL,
+                            default=option_enabled(entry, CONF_ENABLE_REBOOT_CONTROL),
+                        ): bool,
+                    }
+                ),
+                {"collapsed": True},
+            ),
+        }
+    )
 
 
 def _host_from_ssdp(discovery_info: Any) -> str | None:
@@ -194,8 +415,9 @@ class NetgearProAvConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Scan a subnet for NETGEAR Pro AV switches."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = _flatten_section_options(user_input)
             try:
-                _parse_vlans(user_input.get(CONF_VLANS, ""))
+                _parse_vlans(user_input.get(CONF_VLANS, DEFAULT_VLANS))
             except ValueError:
                 errors["base"] = "invalid_vlan_list"
             else:
@@ -277,8 +499,9 @@ class NetgearProAvConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle setup from manual or discovered flows."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = _flatten_section_options(user_input)
             try:
-                vlans = _parse_vlans(user_input.get(CONF_VLANS, ""))
+                vlans = _parse_vlans(user_input.get(CONF_VLANS, DEFAULT_VLANS))
                 session = async_create_clientsession(self.hass)
                 client = NetgearProAvClient(
                     host=user_input[CONF_HOST],
@@ -405,15 +628,17 @@ class NetgearProAvOptionsFlow(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
         data = {**self._config_entry.data, **self._config_entry.options}
         if user_input is not None:
+            user_input = _flatten_section_options(user_input)
+            submitted = {**data, **user_input}
             try:
-                vlans = _parse_vlans(user_input.get(CONF_VLANS, ""))
+                vlans = _parse_vlans(submitted.get(CONF_VLANS, DEFAULT_VLANS))
                 session = async_create_clientsession(self.hass)
                 client = NetgearProAvClient(
-                    host=user_input[CONF_HOST],
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
-                    port=user_input[CONF_PORT],
-                    verify_ssl=user_input[CONF_VERIFY_SSL],
+                    host=submitted[CONF_HOST],
+                    username=submitted[CONF_USERNAME],
+                    password=submitted[CONF_PASSWORD],
+                    port=submitted[CONF_PORT],
+                    verify_ssl=submitted[CONF_VERIFY_SSL],
                     session=session,
                 )
                 await client.async_device_info()
@@ -429,106 +654,39 @@ class NetgearProAvOptionsFlow(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self._config_entry,
                     data={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_USERNAME: user_input[CONF_USERNAME],
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_PORT: user_input[CONF_PORT],
-                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_HOST: submitted[CONF_HOST],
+                        CONF_USERNAME: submitted[CONF_USERNAME],
+                        CONF_PASSWORD: submitted[CONF_PASSWORD],
+                        CONF_PORT: submitted[CONF_PORT],
+                        CONF_VERIFY_SSL: submitted[CONF_VERIFY_SSL],
                         CONF_VLANS: vlans,
                     },
                 )
                 return self.async_create_entry(
                     title="",
                     data={
-                        CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                        CONF_PROTECTION_MARKERS: _parse_markers(user_input.get(CONF_PROTECTION_MARKERS, "")),
-                        CONF_AUTO_PROTECT_TIMEOUT: user_input[CONF_AUTO_PROTECT_TIMEOUT],
-                        CONF_ENABLE_ADMIN_CONTROLS: user_input[CONF_ENABLE_ADMIN_CONTROLS],
-                        CONF_ENABLE_POE_CONTROLS: user_input[CONF_ENABLE_POE_CONTROLS],
-                        CONF_ENABLE_POE_RESET: user_input[CONF_ENABLE_POE_RESET],
-                        CONF_ENABLE_ADMIN_BOUNCE: user_input[CONF_ENABLE_ADMIN_BOUNCE],
-                        CONF_ENABLE_FAN_MODE_CONTROL: user_input[CONF_ENABLE_FAN_MODE_CONTROL],
-                        CONF_ENABLE_SAVE_CONFIG: user_input[CONF_ENABLE_SAVE_CONFIG],
-                        CONF_ENABLE_PORT_DESCRIPTION_CONTROL: user_input[CONF_ENABLE_PORT_DESCRIPTION_CONTROL],
-                        CONF_ENABLE_REBOOT_CONTROL: user_input[CONF_ENABLE_REBOOT_CONTROL],
+                        CONF_SCAN_INTERVAL: submitted[CONF_SCAN_INTERVAL],
+                        CONF_PROTECTION_MARKERS: _parse_markers(
+                            submitted.get(CONF_PROTECTION_MARKERS, "")
+                        ),
+                        CONF_AUTO_PROTECT_TIMEOUT: submitted[CONF_AUTO_PROTECT_TIMEOUT],
+                        CONF_ENABLE_ADMIN_CONTROLS: submitted[CONF_ENABLE_ADMIN_CONTROLS],
+                        CONF_ENABLE_POE_CONTROLS: submitted[CONF_ENABLE_POE_CONTROLS],
+                        CONF_ENABLE_POE_RESET: submitted[CONF_ENABLE_POE_RESET],
+                        CONF_ENABLE_ADMIN_BOUNCE: submitted[CONF_ENABLE_ADMIN_BOUNCE],
+                        CONF_ENABLE_FAN_MODE_CONTROL: submitted[
+                            CONF_ENABLE_FAN_MODE_CONTROL
+                        ],
+                        CONF_ENABLE_SAVE_CONFIG: submitted[CONF_ENABLE_SAVE_CONFIG],
+                        CONF_ENABLE_PORT_DESCRIPTION_CONTROL: submitted[
+                            CONF_ENABLE_PORT_DESCRIPTION_CONTROL
+                        ],
+                        CONF_ENABLE_REBOOT_CONTROL: submitted[CONF_ENABLE_REBOOT_CONTROL],
                     },
                 )
 
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_HOST,
-                    default=data.get(CONF_HOST, ""),
-                ): str,
-                vol.Required(
-                    CONF_USERNAME,
-                    default=data.get(CONF_USERNAME, ""),
-                ): str,
-                vol.Required(
-                    CONF_PASSWORD,
-                    default=data.get(CONF_PASSWORD, ""),
-                ): str,
-                vol.Optional(
-                    CONF_PORT,
-                    default=data.get(CONF_PORT, DEFAULT_PORT),
-                ): int,
-                vol.Optional(
-                    CONF_VERIFY_SSL,
-                    default=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-                ): bool,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS),
-                ): vol.All(int, vol.Range(min=30, max=3600)),
-                vol.Optional(
-                    CONF_VLANS,
-                    default=_vlans_to_string(data.get(CONF_VLANS, [])),
-                ): str,
-                vol.Optional(
-                    CONF_PROTECTION_MARKERS,
-                    default=_markers_to_string(
-                        data[CONF_PROTECTION_MARKERS]
-                        if data.get(CONF_PROTECTION_MARKERS)
-                        else list(CRITICAL_NEIGHBOR_MARKERS)
-                    )
-                    or DEFAULT_PROTECTION_MARKERS,
-                ): str,
-                vol.Optional(
-                    CONF_AUTO_PROTECT_TIMEOUT,
-                    default=auto_protect_timeout(self._config_entry),
-                ): vol.All(int, vol.Range(min=0, max=86400)),
-                vol.Optional(
-                    CONF_ENABLE_ADMIN_CONTROLS,
-                    default=control_option_enabled(self._config_entry, CONF_ENABLE_ADMIN_CONTROLS),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_POE_CONTROLS,
-                    default=control_option_enabled(self._config_entry, CONF_ENABLE_POE_CONTROLS),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_POE_RESET,
-                    default=control_option_enabled(self._config_entry, CONF_ENABLE_POE_RESET),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_ADMIN_BOUNCE,
-                    default=control_option_enabled(self._config_entry, CONF_ENABLE_ADMIN_BOUNCE),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_FAN_MODE_CONTROL,
-                    default=control_option_enabled(self._config_entry, CONF_ENABLE_FAN_MODE_CONTROL),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_SAVE_CONFIG,
-                    default=option_enabled(self._config_entry, CONF_ENABLE_SAVE_CONFIG),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_PORT_DESCRIPTION_CONTROL,
-                    default=option_enabled(self._config_entry, CONF_ENABLE_PORT_DESCRIPTION_CONTROL),
-                ): bool,
-                vol.Optional(
-                    CONF_ENABLE_REBOOT_CONTROL,
-                    default=option_enabled(self._config_entry, CONF_ENABLE_REBOOT_CONTROL),
-                ): bool,
-            }
+        return self.async_show_form(
+            step_id="init",
+            data_schema=_options_schema(data, self._config_entry),
+            errors=errors,
         )
-        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
